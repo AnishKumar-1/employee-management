@@ -2,6 +2,7 @@ package com.management.exception;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.NoSuchElementException;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -32,13 +33,13 @@ public class GlobalException {
 					ex.getLocalizedMessage(), request.getRequestURI());
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
-		if(ex instanceof IllegalArgumentException) {
+		if(ex instanceof NoSuchElementException) {
 			apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
 					ex.getLocalizedMessage(), request.getRequestURI());
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
 		
-
+         //NoSuchElementException
 		// Default Internal Server Error response
 		apiResponse = new ApiError(formattedDate, HttpStatus.INTERNAL_SERVER_ERROR.value(),
 				HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage(), request.getRequestURI());
@@ -49,6 +50,22 @@ public class GlobalException {
 	
 
 	
+	   @ExceptionHandler(IllegalArgumentException.class)
+	    public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
+	        // 403 Forbidden response
+
+	        ApiError apiResponse = new ApiError(
+	        		formattedDate,
+	            HttpStatus.BAD_REQUEST.value(),
+	            HttpStatus.BAD_REQUEST,
+	            ex.getMessage(),
+	            request.getRequestURI()
+	        );
+
+	        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+	    }
+	   
+
 	   @ExceptionHandler(AuthorizationDeniedException.class)
 	    public ResponseEntity<ApiError> handleAuthorizationDeniedException(AuthorizationDeniedException ex, HttpServletRequest request) {
 	        // 403 Forbidden response
