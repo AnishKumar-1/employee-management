@@ -31,6 +31,11 @@ public class GlobalException {
 					ex.getLocalizedMessage(), request.getRequestURI());
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
+		if(ex instanceof IllegalArgumentException) {
+			apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
+					ex.getLocalizedMessage(), request.getRequestURI());
+			httpStatus = HttpStatus.BAD_REQUEST;
+		}
 
 		// Default Internal Server Error response
 		apiResponse = new ApiError(formattedDate, HttpStatus.INTERNAL_SERVER_ERROR.value(),
