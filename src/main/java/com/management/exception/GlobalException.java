@@ -3,6 +3,7 @@ package com.management.exception;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -36,6 +37,7 @@ public class GlobalException {
 					ex.getLocalizedMessage(), request.getRequestURI());
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
+		
 
 		// Default Internal Server Error response
 		apiResponse = new ApiError(formattedDate, HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -44,6 +46,8 @@ public class GlobalException {
 
 		return new ResponseEntity<>(apiResponse, httpStatus);
 	}
+	
+
 	
 	   @ExceptionHandler(AuthorizationDeniedException.class)
 	    public ResponseEntity<ApiError> handleAuthorizationDeniedException(AuthorizationDeniedException ex, HttpServletRequest request) {

@@ -48,12 +48,7 @@ public class LoginController {
 	    }
 	}
 	
-	
-	@GetMapping("/test")
-	@PreAuthorize("hasAuthority('EMPLOYEE')")
-	public String test() {
-		return "hello admin";
-	}
+
 	
 	   //authentication user for login purpose
     private void authenticate(String email, String password) {
