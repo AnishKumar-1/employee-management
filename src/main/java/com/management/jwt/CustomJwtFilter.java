@@ -3,12 +3,14 @@ package com.management.jwt;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import com.management.security.CustomUserDetails;
 
@@ -24,6 +26,10 @@ public class CustomJwtFilter extends OncePerRequestFilter{
 	private JwtUtil jwtUtil;
 	@Autowired
 	private CustomUserDetails customUserDetils;
+	
+	@Autowired
+	@Qualifier("handlerExceptionResolver")
+	private HandlerExceptionResolver handlerExceptionResolver;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -45,10 +51,10 @@ public class CustomJwtFilter extends OncePerRequestFilter{
 				 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 			 }
 			
-		}catch(Exception ex) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-			return;
-		}
+		}catch (Exception ex) {
+			handlerExceptionResolver.resolveException(request, response, null, ex);
+	        return;
+	    }
 		filterChain.doFilter(request, response);
 	}
 	

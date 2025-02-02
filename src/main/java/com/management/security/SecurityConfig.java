@@ -27,6 +27,8 @@ public class SecurityConfig {
 	private CustomJwtFilter jwtFilter;
 	@Autowired
 	private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	@Autowired
+	private CustomAccessDeniedHandler customAccessDeniedHandler;
 	
 	
     @Bean
@@ -41,7 +43,10 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Stateless authentication (JWT, etc.)
             )
             .addFilterBefore(jwtFilter,UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(exception->exception.authenticationEntryPoint(customAuthenticationEntryPoint))
+            .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(customAuthenticationEntryPoint)  // Handles 401 Unauthorized
+                    .accessDeniedHandler(customAccessDeniedHandler)  // Handles 403 Forbidden
+                )
             .build();
     }
 
