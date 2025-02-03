@@ -2,13 +2,15 @@ package com.management.exception;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
-
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,30 +18,34 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class GlobalException {
 
-	   private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-	   String formattedDate = LocalDateTime.now().format(dateFormatter);
+	private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+	String formattedDate = LocalDateTime.now().format(dateFormatter);
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiError> exceptionHandler(Exception ex, HttpServletRequest request) {
 		// Format timestamp as "dd/MM/yyyy"
-      
-		 
+
 		ApiError apiResponse;
 
 		HttpStatus httpStatus;
-		
+
 		if (ex instanceof BadCredentialsException) {
 			apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
 					ex.getLocalizedMessage(), request.getRequestURI());
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
-		if(ex instanceof NoSuchElementException) {
+		if (ex instanceof NoSuchElementException) {
 			apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
 					ex.getLocalizedMessage(), request.getRequestURI());
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
-		
-         //NoSuchElementException
+		if (ex instanceof ResourceNotFoundException) {
+			apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
+					ex.getLocalizedMessage(), request.getRequestURI());
+			httpStatus = HttpStatus.BAD_REQUEST;
+		}
+
+		// NoSuchElementException
 		// Default Internal Server Error response
 		apiResponse = new ApiError(formattedDate, HttpStatus.INTERNAL_SERVER_ERROR.value(),
 				HttpStatus.INTERNAL_SERVER_ERROR, ex.getLocalizedMessage(), request.getRequestURI());
@@ -47,37 +53,36 @@ public class GlobalException {
 
 		return new ResponseEntity<>(apiResponse, httpStatus);
 	}
-	
 
-	
-	   @ExceptionHandler(IllegalArgumentException.class)
-	    public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
-	        // 403 Forbidden response
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex,
+			HttpServletRequest request) {
+		// 403 Forbidden response
 
-	        ApiError apiResponse = new ApiError(
-	        		formattedDate,
-	            HttpStatus.BAD_REQUEST.value(),
-	            HttpStatus.BAD_REQUEST,
-	            ex.getMessage(),
-	            request.getRequestURI()
-	        );
+		ApiError apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
+				ex.getMessage(), request.getRequestURI());
 
-	        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
-	    }
-	   
+		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+	}
 
-	   @ExceptionHandler(AuthorizationDeniedException.class)
-	    public ResponseEntity<ApiError> handleAuthorizationDeniedException(AuthorizationDeniedException ex, HttpServletRequest request) {
-	        // 403 Forbidden response
+	@ExceptionHandler(AuthorizationDeniedException.class)
+	public ResponseEntity<ApiError> handleAuthorizationDeniedException(AuthorizationDeniedException ex,
+			HttpServletRequest request) {
+		// 403 Forbidden response
 
-	        ApiError apiResponse = new ApiError(
-	        		formattedDate,
-	            HttpStatus.FORBIDDEN.value(),
-	            HttpStatus.FORBIDDEN,
-	            ex.getMessage(),
-	            request.getRequestURI()
-	        );
+		ApiError apiResponse = new ApiError(formattedDate, HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN,
+				ex.getMessage(), request.getRequestURI());
 
-	        return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
-	    }
+		return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<Object> methodLevelValidation(MethodArgumentNotValidException ex) {
+
+		Map<String, String> errors = new HashMap<>();
+		for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+			errors.put(error.getField(), error.getDefaultMessage());
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+	}
 }
