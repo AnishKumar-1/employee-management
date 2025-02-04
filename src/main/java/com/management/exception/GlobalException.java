@@ -45,29 +45,8 @@ public class GlobalException {
 
 		return new ResponseEntity<>(apiResponse, httpStatus);
 	}
-
-//
-//	@ExceptionHandler(IllegalArgumentException.class)
-//	public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex,
-//			HttpServletRequest request) {
-//		// 403 Forbidden response
-//
-//		ApiError apiResponse = new ApiError(formattedDate, HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST,
-//				ex.getMessage(), request.getRequestURI());
-//
-//		return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
-//	}
-//
-//	@ExceptionHandler(AuthorizationDeniedException.class)
-//	public ResponseEntity<ApiError> handleAuthorizationDeniedException(AuthorizationDeniedException ex,
-//			HttpServletRequest request) {
-//		// 403 Forbidden response
-//
-//		ApiError apiResponse = new ApiError(formattedDate, HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN,
-//				ex.getMessage(), request.getRequestURI());
-//
-//		return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
-//	}
+	
+	
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Object> methodLevelValidation(MethodArgumentNotValidException ex) {
