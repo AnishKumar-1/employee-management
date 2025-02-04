@@ -18,6 +18,7 @@ import com.management.repository.UserModelRepo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeService {
@@ -49,13 +50,14 @@ public class EmployeeService {
 		employeeModel.setDepartment(department);
 
 		EmployeeModel result = employeeRepo.save(employeeModel);
-		EmployeeDto employeeDto=new EmployeeDto();
-		
-		
+		EmployeeDto employeeDto = new EmployeeDto();
+
 		employeeDto.setId(result.getId());
-		UserDto userDto=new UserDto(result.getUser().getId(),result.getUser().getEmail(),result.getUser().getRole().getName());
+		UserDto userDto = new UserDto(result.getUser().getId(), result.getUser().getEmail(),
+				result.getUser().getRole().getName());
 		employeeDto.setUser(userDto);
-		DepartmentDto departmentDto=new DepartmentDto(result.getDepartment().getId(),result.getDepartment().getName(),result.getDepartment().getDescription());
+		DepartmentDto departmentDto = new DepartmentDto(result.getDepartment().getId(),
+				result.getDepartment().getName(), result.getDepartment().getDescription());
 		employeeDto.setFirstName(result.getFirstName());
 		employeeDto.setLastName(result.getLastName());
 		employeeDto.setPhoneNumber(result.getPhoneNumber());
@@ -88,18 +90,35 @@ public class EmployeeService {
 		return ResponseEntity.ok(dto);
 
 	}
-	
-	
-	//delete employees by employee id
-	public ResponseEntity<Void> deleteEmployees(Long employeeId){
-		 if (!employeeRepo.existsById(employeeId)) {
-		        throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
-		    }
-		 employeeRepo.deleteById(employeeId);
-		 return ResponseEntity.noContent().build();
+
+	// delete employees by employee id
+	public ResponseEntity<Void> deleteEmployees(Long employeeId) {
+		if (!employeeRepo.existsById(employeeId)) {
+			throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
+		}
+		employeeRepo.deleteById(employeeId);
+		return ResponseEntity.noContent().build();
 	}
-	
-	
-	//
+
+	// update employee details
+	// will get employee id through pathvariable to update perticular employee
+	// details
+	// get first name and lastname, phone number and salary
+	public ResponseEntity<Object> updateEmployee(Long employeeId, EmployeeDto employee) {
+		Optional<EmployeeModel> empModel = employeeRepo.findById(employeeId);
+		if (!empModel.isPresent()) {
+			throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
+		}
+
+		EmployeeModel storedResult = empModel.get();
+		storedResult.setFirstName(employee.getFirstName());
+		storedResult.setLastName(employee.getLastName());
+		storedResult.setPhoneNumber(employee.getPhoneNumber());
+		storedResult.setSalary(employee.getSalary());
+		employeeRepo.save(storedResult);
+		
+		return ResponseEntity.ok("Employee updated successfully.");
+
+	}
 
 }

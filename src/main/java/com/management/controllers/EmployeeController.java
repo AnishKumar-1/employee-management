@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,5 +58,16 @@ public class EmployeeController {
 			throw new IllegalArgumentException("Employee id is required.");
 		}
 		return employeeService.deleteEmployees(employeeId);
+	}
+	
+	//update employee details by its id
+	//employee id will get through pathvariable 
+	@PutMapping("/employees/{employeeId}")
+	@PreAuthorize("hasAnyAuthority('ADMIN','MANAGER')")
+	public ResponseEntity<Object> employeeUpdate(@PathVariable Long employeeId,@Valid @RequestBody EmployeeDto dto){
+		if (employeeId == null) {
+			throw new IllegalArgumentException("Employee id is required.");
+		}
+		return employeeService.updateEmployee(employeeId, dto);
 	}
 }

@@ -45,9 +45,9 @@ public class GlobalException {
 
 		return new ResponseEntity<>(apiResponse, httpStatus);
 	}
-	
-	
 
+	
+	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Object> methodLevelValidation(MethodArgumentNotValidException ex) {
 
