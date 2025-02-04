@@ -88,5 +88,18 @@ public class EmployeeService {
 		return ResponseEntity.ok(dto);
 
 	}
+	
+	
+	//delete employees by employee id
+	public ResponseEntity<Void> deleteEmployees(Long employeeId){
+		 if (!employeeRepo.existsById(employeeId)) {
+		        throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
+		    }
+		 employeeRepo.deleteById(employeeId);
+		 return ResponseEntity.noContent().build();
+	}
+	
+	
+	//
 
 }

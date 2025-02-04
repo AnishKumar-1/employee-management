@@ -3,6 +3,7 @@ package com.management.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,5 +45,17 @@ public class EmployeeController {
 	@PreAuthorize("hasAnyAuthority('ADMIN','MANAGER')")
 	public ResponseEntity<Object> allEmployee() {
 		return employeeService.employees();
+	}
+
+	// delete employee by employee id
+	// employee id will get through pathvariable
+
+	@DeleteMapping("/employees/{employeeId}")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	public ResponseEntity<Void> deleteEmpoyee(@PathVariable Long employeeId) {
+		if (employeeId == null) {
+			throw new IllegalArgumentException("Employee id is required.");
+		}
+		return employeeService.deleteEmployees(employeeId);
 	}
 }
