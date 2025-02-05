@@ -13,6 +13,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
@@ -37,6 +40,10 @@ public class GlobalException {
 			httpStatus = HttpStatus.BAD_REQUEST;
 		} else if (ex instanceof AuthorizationDeniedException) {
 			httpStatus = HttpStatus.FORBIDDEN;
+		} else if (ex instanceof ExpiredJwtException) {
+			httpStatus = HttpStatus.UNAUTHORIZED;
+		} else if (ex instanceof MalformedJwtException) {
+			httpStatus = HttpStatus.UNAUTHORIZED;
 		}
 
 		// Create error response
@@ -46,8 +53,6 @@ public class GlobalException {
 		return new ResponseEntity<>(apiResponse, httpStatus);
 	}
 
-	
-	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Object> methodLevelValidation(MethodArgumentNotValidException ex) {
 

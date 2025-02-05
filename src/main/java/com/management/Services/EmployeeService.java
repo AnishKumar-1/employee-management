@@ -1,8 +1,10 @@
 package com.management.Services;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.management.dto.DepartmentDto;
@@ -15,10 +17,8 @@ import com.management.models.UserModel;
 import com.management.repository.DepartmentRepo;
 import com.management.repository.EmployeeRepo;
 import com.management.repository.UserModelRepo;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
@@ -29,6 +29,10 @@ public class EmployeeService {
 	private UserModelRepo userRepo;
 	@Autowired
 	private DepartmentRepo departmentRepo;
+	@Autowired
+	private UserProfileService userProfileService;
+	@Autowired
+	private ModelMapper modelMapper;
 
 	// create employee other data will receive through body
 	// employee id will receive through path variable
@@ -50,45 +54,14 @@ public class EmployeeService {
 		employeeModel.setDepartment(department);
 
 		EmployeeModel result = employeeRepo.save(employeeModel);
-		EmployeeDto employeeDto = new EmployeeDto();
 
-		employeeDto.setId(result.getId());
-		UserDto userDto = new UserDto(result.getUser().getId(), result.getUser().getEmail(),
-				result.getUser().getRole().getName());
-		employeeDto.setUser(userDto);
-		DepartmentDto departmentDto = new DepartmentDto(result.getDepartment().getId(),
-				result.getDepartment().getName(), result.getDepartment().getDescription());
-		employeeDto.setFirstName(result.getFirstName());
-		employeeDto.setLastName(result.getLastName());
-		employeeDto.setPhoneNumber(result.getPhoneNumber());
-		employeeDto.setSalary(result.getSalary());
-		employeeDto.setDepartment(departmentDto);
-		return ResponseEntity.status(HttpStatus.CREATED).body(employeeDto);
+		return ResponseEntity.status(HttpStatus.CREATED).body(convertToEmployeeDto(result));
 	}
 
 	// get all employee
 	public ResponseEntity<Object> employees() {
-
-		List<EmployeeModel> employee = employeeRepo.findAll();
-		List<EmployeeDto> dto = new ArrayList<>();
-
-		for (EmployeeModel employeeModel : employee) {
-			DepartmentDto departmentDto = new DepartmentDto();
-
-			departmentDto.setId(employeeModel.getDepartment().getId());
-			departmentDto.setName(employeeModel.getDepartment().getName());
-			departmentDto.setDescription(employeeModel.getDepartment().getDescription());
-			UserDto userDto = new UserDto();
-			userDto.setUser_id(employeeModel.getUser().getId());
-			userDto.setEmail(employeeModel.getUser().getEmail());
-			userDto.setRole(employeeModel.getUser().getRole().getName());
-			EmployeeDto employeeDto = new EmployeeDto(employeeModel.getId(), userDto, employeeModel.getFirstName(),
-					employeeModel.getLastName(), employeeModel.getPhoneNumber(), employeeModel.getSalary(),
-					departmentDto);
-			dto.add(employeeDto);
-		}
-		return ResponseEntity.ok(dto);
-
+		return ResponseEntity
+				.ok(employeeRepo.findAll().stream().map(emp -> convertToEmployeeDto(emp)).collect(Collectors.toList()));
 	}
 
 	// delete employees by employee id
@@ -116,9 +89,36 @@ public class EmployeeService {
 		storedResult.setPhoneNumber(employee.getPhoneNumber());
 		storedResult.setSalary(employee.getSalary());
 		employeeRepo.save(storedResult);
-		
+
 		return ResponseEntity.ok("Employee updated successfully.");
 
+	}
+
+	// get employee by its id
+	// only admin manager and self employee can get this endpoint
+
+	public ResponseEntity<Object> employeeById(Long employeeId) {
+		Optional<EmployeeModel> empModel = employeeRepo.findById(employeeId);
+		if (!empModel.isPresent()) {
+			throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
+		}
+		EmployeeModel employee = empModel.get();
+
+		// 🔹 Get the current logged-in user
+		UserModel currentUser = userProfileService.getProfile();
+		String currentUserRole = currentUser.getRole().getName();
+
+		// ✅ Corrected authorization check
+		if (!(currentUserRole.equals("ADMIN") || currentUserRole.equals("MANAGER")
+				|| currentUser.getId().equals(employee.getUser().getId()))) {
+			throw new AuthorizationDeniedException("You are not authorized to access this resource");
+		}
+
+		return ResponseEntity.ok(convertToEmployeeDto(employee));
+	}
+
+	private EmployeeDto convertToEmployeeDto(EmployeeModel emp) {
+		return modelMapper.map(emp, EmployeeDto.class);
 	}
 
 }

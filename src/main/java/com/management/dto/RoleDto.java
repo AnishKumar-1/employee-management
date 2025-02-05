@@ -9,9 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
-
-	private Long id;
-	private String email;
-	private RoleDto role;
+public class RoleDto {
+  private String name;
 }

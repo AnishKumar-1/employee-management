@@ -70,4 +70,13 @@ public class EmployeeController {
 		}
 		return employeeService.updateEmployee(employeeId, dto);
 	}
+	
+	//get employee by its id
+	@GetMapping("/employees/{employeeId}")
+	public ResponseEntity<Object> empById(@PathVariable Long employeeId){
+		if (employeeId == null) {
+			throw new IllegalArgumentException("Employee id is required.");
+		}
+		return employeeService.employeeById(employeeId);
+	}
 }
