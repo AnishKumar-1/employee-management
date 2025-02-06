@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -45,6 +46,9 @@ public class GlobalException {
 		} else if (ex instanceof MalformedJwtException) {
 			httpStatus = HttpStatus.UNAUTHORIZED;
 		}
+		 else if (ex instanceof NoResourceFoundException) {
+				httpStatus = HttpStatus.BAD_REQUEST;
+			}
 
 		// Create error response
 		ApiError apiResponse = new ApiError(formattedDate, httpStatus.value(), httpStatus, ex.getLocalizedMessage(),

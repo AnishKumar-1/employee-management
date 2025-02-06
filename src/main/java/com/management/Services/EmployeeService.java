@@ -7,9 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
-import com.management.dto.DepartmentDto;
 import com.management.dto.EmployeeDto;
-import com.management.dto.UserDto;
 import com.management.exception.ResourceNotFoundException;
 import com.management.models.DepartmentModel;
 import com.management.models.EmployeeModel;
