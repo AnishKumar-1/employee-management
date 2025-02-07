@@ -45,10 +45,11 @@ public class GlobalException {
 			httpStatus = HttpStatus.UNAUTHORIZED;
 		} else if (ex instanceof MalformedJwtException) {
 			httpStatus = HttpStatus.UNAUTHORIZED;
+		} else if (ex instanceof NoResourceFoundException) {
+			httpStatus = HttpStatus.BAD_REQUEST;
+		} else if (ex instanceof DuplicateResourceException) {
+			httpStatus = HttpStatus.BAD_REQUEST;
 		}
-		 else if (ex instanceof NoResourceFoundException) {
-				httpStatus = HttpStatus.BAD_REQUEST;
-			}
 
 		// Create error response
 		ApiError apiResponse = new ApiError(formattedDate, httpStatus.value(), httpStatus, ex.getLocalizedMessage(),

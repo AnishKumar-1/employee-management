@@ -1,14 +1,16 @@
 package com.management.Services;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
-
-import com.management.dto.MangerDto;
 import com.management.dto.ProjectDto;
+import com.management.exception.DuplicateResourceException;
 import com.management.exception.ResourceNotFoundException;
 import com.management.models.EmployeeModel;
 import com.management.models.ProjectModel;
@@ -25,24 +27,30 @@ public class ProjectService {
 	@Autowired
 	private ModelMapper modelMapper;
 
-	// create project by getting manager id
+	// create project by manager id
 	public ResponseEntity<Object> createProject(Long manager_id, ProjectDto project) {
 		EmployeeModel manager = employeeRepo.findById(manager_id)
 				.orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + manager_id));
+
 		String managerRole = manager.getUser().getRole().getName();
+
 		if (!managerRole.equalsIgnoreCase("MANAGER")) {
 			throw new AuthorizationDeniedException("Employee is not a manager");
 		}
+
+		// Check if a project with the same name already exists
+
+		if (projectRepo.findByName(project.getName()).isPresent()) {
+			throw new DuplicateResourceException("Project with name '" + project.getName() + "' already exists.");
+		}
+
 		ProjectModel projectModel = modelMapper.map(project, ProjectModel.class);
 		projectModel.setManager(manager);
-		ProjectModel savedProjectModel=projectRepo.save(projectModel);
-		ProjectDto pDto=new ProjectDto();
-		pDto.setId(savedProjectModel.getId());
-		pDto.setName(savedProjectModel.getName());
-		pDto.setDescription(savedProjectModel.getDescription());
-		MangerDto managerDto=modelMapper.map(savedProjectModel.getManager(),MangerDto.class);
-		pDto.setManager(managerDto);
-		
+
+		ProjectModel savedProjectModel = projectRepo.save(projectModel);
+
+		ProjectDto pDto = modelMapper.map(savedProjectModel, ProjectDto.class);
+
 		return ResponseEntity.status(HttpStatus.CREATED).body(pDto);
 	}
 
@@ -55,4 +63,31 @@ public class ProjectService {
 		projectRepo.deleteById(project_id);
 	}
 
+	// get all project
+	public ResponseEntity<Object> AllProject() {
+		List<ProjectModel> projects = projectRepo.findAll();
+		if (projects == null) {
+			return ResponseEntity.ok("No data found");
+		}
+		return ResponseEntity.ok(projects.stream().map(sourceData -> modelMapper.map(sourceData, ProjectDto.class))
+				.collect(Collectors.toList()));
+	}
+
+	// get project by id
+	public ResponseEntity<Object> projectById(Long project_id) {
+		ProjectModel project = projectRepo.findById(project_id)
+				.orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + project_id));
+
+		return ResponseEntity.ok(modelMapper.map(project, ProjectDto.class));
+	}
+
+	// update project by project id
+	public ResponseEntity<Object> updateProjectById(Long project_id, ProjectDto projectDto) {
+		ProjectModel storedProject = projectRepo.findById(project_id)
+				.orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + project_id));
+		storedProject.setName(projectDto.getName());
+		storedProject.setDescription(projectDto.getDescription());
+		projectRepo.save(storedProject);
+		return ResponseEntity.ok("Project record updated successfully.");
+	}
 }
