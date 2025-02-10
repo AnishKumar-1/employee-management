@@ -1,6 +1,8 @@
 package com.management.Services;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -9,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
+
+import com.management.dto.EmployeeDto;
 import com.management.dto.ProjectDto;
 import com.management.exception.DuplicateResourceException;
 import com.management.exception.ResourceNotFoundException;
@@ -89,5 +93,32 @@ public class ProjectService {
 		storedProject.setDescription(projectDto.getDescription());
 		projectRepo.save(storedProject);
 		return ResponseEntity.ok("Project record updated successfully.");
+	}
+
+	// assign employee to a project
+	// project_id/assign/empid
+	public ResponseEntity<Object> assginEmToProject(Long project_id, Long emp_id) {
+		ProjectModel storedProject = projectRepo.findById(project_id)
+				.orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + project_id));
+
+		EmployeeModel storedEmployee = employeeRepo.findById(emp_id)
+				.orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + emp_id));
+
+		Set<EmployeeModel> employeesSet = storedProject.getEmployee();
+		   if (employeesSet == null) {
+		        employeesSet = new HashSet<>();
+		    }
+		employeesSet.add(storedEmployee);
+		storedProject.setEmployee(employeesSet);
+		   // Save the updated project
+	    projectRepo.save(storedProject);
+
+	    // Convert assigned employees to DTO
+	    Set<EmployeeDto> employeeDtos = employeesSet.stream()
+	            .map(employee -> modelMapper.map(employee, EmployeeDto.class))
+	            .collect(Collectors.toSet());
+
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(employeeDtos);
 	}
 }

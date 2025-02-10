@@ -3,6 +3,10 @@ package com.management.models;
 import java.math.BigDecimal;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,7 +43,7 @@ public class EmployeeModel {
 	
 	@OneToOne
 	@JoinColumn(name = "user_id", referencedColumnName = "id")
-	private UserModel user; // Replaced UserDto with UserModel
+	private UserModel user;
 	
 	@Column(nullable = false, length = 15)
 	private String phoneNumber;
@@ -54,5 +58,6 @@ public class EmployeeModel {
 	@OneToMany(mappedBy = "manager")
 	private Set<ProjectModel> managedProjects;
 	@ManyToMany(mappedBy = "employee")
+	@JsonManagedReference
 	private Set<ProjectModel> projects;
 }

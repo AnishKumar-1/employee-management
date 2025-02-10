@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -28,4 +29,6 @@ public class EmployeeDto {
 	@NotNull(message = "salary cannot be empty")
 	private BigDecimal salary; 
 	private DepartmentDto department;
+	  // ✅ Include the projects and managedProjects fields
+    private Set<ProjectDto> projects;  // Projects employee is working on
 }

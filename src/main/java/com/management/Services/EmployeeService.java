@@ -1,6 +1,7 @@
 package com.management.Services;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,9 @@ import com.management.models.UserModel;
 import com.management.repository.DepartmentRepo;
 import com.management.repository.EmployeeRepo;
 import com.management.repository.UserModelRepo;
+
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,9 +61,18 @@ public class EmployeeService {
 	}
 
 	// get all employee
+//	public ResponseEntity<Object> employees() {
+//		List<EmployeeModel> allEmp = employeeRepo.findAll();
+//		EmployeeDto result = modelMapper.map(allEmp, EmployeeDto.class);
+//		return ResponseEntity.ok(result);
+//	}
+	
+	
 	public ResponseEntity<Object> employees() {
-		return ResponseEntity
-				.ok(employeeRepo.findAll().stream().map(emp -> convertToEmployeeDto(emp)).collect(Collectors.toList()));
+	    List<EmployeeModel> allEmp = employeeRepo.findAll();
+	    Type targetListType = new TypeToken<List<EmployeeDto>>() {}.getType();
+	    List<EmployeeDto> result = modelMapper.map(allEmp, targetListType);
+	    return ResponseEntity.ok(result);
 	}
 
 	// delete employees by employee id

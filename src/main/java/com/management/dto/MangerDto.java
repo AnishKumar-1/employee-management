@@ -12,5 +12,4 @@ public class MangerDto {
 	private Long id;
     private String firstName;
     private String lastName;
-    private DepartmentDto department;
 }

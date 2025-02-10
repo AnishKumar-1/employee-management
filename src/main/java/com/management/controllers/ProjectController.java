@@ -65,4 +65,10 @@ public class ProjectController {
 		return projectService.updateProjectById(project_id, dto);
 	}
 	
+	    //assign employee to project
+		@PostMapping("/{project_id}/assign/{employee_id}")
+		@PreAuthorize("hasAnyAuthority('ADMIN','MANAGER')")
+		public ResponseEntity<Object> assginEmpToProject(@PathVariable Long project_id,@PathVariable Long employee_id){
+			return projectService.assginEmToProject(project_id, employee_id);
+		}
 }

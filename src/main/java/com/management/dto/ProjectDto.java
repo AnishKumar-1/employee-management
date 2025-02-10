@@ -1,9 +1,5 @@
 package com.management.dto;
 
-import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +17,4 @@ public class ProjectDto {
 	@NotBlank(message = "project description cannot be empty")
 	private String description; 
 	private MangerDto manager;
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private Set<EmployeeDto>employee;
-
 }

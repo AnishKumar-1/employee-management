@@ -16,6 +16,11 @@ import lombok.Setter;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 @Entity
 @Getter
 @Setter
@@ -39,5 +44,6 @@ public class ProjectModel {
 	@JoinTable(name="project_employee",joinColumns = @JoinColumn(name="project_id")
 	,inverseJoinColumns = @JoinColumn(name="employee_id")
 	)
+	@JsonBackReference
 	private Set<EmployeeModel>employee;
 }
