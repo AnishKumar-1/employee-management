@@ -1,4 +1,4 @@
-package com.management.Services;
+package com.management.services;
 
 import com.management.dto.employeeDto.EmployeeRequest;
 import com.management.dto.employeeDto.EmployeeResponse;
@@ -8,13 +8,9 @@ import com.management.models.*;
 import com.management.repository.*;
 import com.management.utils.Helper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -87,17 +83,24 @@ public class EmployeeService {
 
         Set<String> projects=emp.getProjects().stream().map(ProjectModel::getName).collect(Collectors.toSet());
 
-        EmployeeResponse response=EmployeeResponse.builder()
-                .id(emp.getId()).firstName(emp.getFirstName())
-                .lastName(emp.getLastName())
-                .email(emp.getUser().getEmail())
-                .phoneNumber(emp.getPhoneNumber())
-                .salary(emp.getSalary())
-                .departmentName(emp.getDepartment().getName())
-                .designation(emp.getDesignation().getTitle())
-                .projects(projects).build();
+        EmployeeResponse response=helper.toEmployeeResponse(emp,emp.getUser(),projects);
         return ResponseEntity.ok(response);
 
+    }
+
+    //get all employee
+    public ResponseEntity<List<EmployeeResponse>> employees(){
+       List<EmployeeModel> emp=employeeRepo.findAll();
+       if(emp.isEmpty()){
+           throw new ResourceNotFoundException("No record found");
+       }
+       Set<String> projects=emp.stream().flatMap(p->p.getProjects().stream())
+               .map(ProjectModel::getName)
+               .collect(Collectors.toSet());
+
+       List<EmployeeResponse> responses=emp.stream().map(data->
+               helper.toEmployeeResponse(data,data.getUser(),projects)).toList();
+       return ResponseEntity.ok(responses);
     }
 
 

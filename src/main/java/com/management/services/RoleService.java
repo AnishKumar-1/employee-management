@@ -1,4 +1,4 @@
-package com.management.Services;
+package com.management.services;
 
 import com.management.exception.ResourceNotFoundException;
 import com.management.models.Role;

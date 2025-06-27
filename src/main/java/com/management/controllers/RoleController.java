@@ -1,6 +1,6 @@
 package com.management.controllers;
 
-import com.management.Services.RoleService;
+import com.management.services.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

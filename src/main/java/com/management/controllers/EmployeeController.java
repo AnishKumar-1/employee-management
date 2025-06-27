@@ -1,6 +1,6 @@
 package com.management.controllers;
 
-import com.management.Services.EmployeeService;
+import com.management.services.EmployeeService;
 import com.management.dto.employeeDto.EmployeeRequest;
 import com.management.dto.employeeDto.EmployeeResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequestMapping("/employee")
 @RestController
@@ -43,6 +45,14 @@ public class EmployeeController {
     @Operation(summary = "get employee (Admin/Self Employee)",description = "required employee id to get its record")
     public ResponseEntity<EmployeeResponse> getProjectById(@NotNull @PathVariable Long empId){
         return employeeService.getEmployeeById(empId);
+    }
+
+    //get all employee
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "get all employee (Admin)")
+    public ResponseEntity<List<EmployeeResponse>> employees(){
+    return employeeService.employees();
     }
 
 }
