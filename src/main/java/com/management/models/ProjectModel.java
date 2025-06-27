@@ -1,46 +1,43 @@
 package com.management.models;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.management.models.EmployeeModel;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Project")
+@Table(name = "project")
 public class ProjectModel {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id; 
-	@Column(nullable = false,unique = true)
-	private String name; 
-	@Column(nullable = false,columnDefinition = "TEXT")
-	private String description; 
-	@ManyToOne
-	@JoinColumn(name="manager_id",referencedColumnName = "id")
-	private EmployeeModel manager;
-	
+	private Long id;
+
+	@Column(nullable = false, unique = true)
+	private String name;
+
+	@Column(nullable = false)
+	private String description;
+
+	@Column(nullable = false)
+	private String start_date;
+
 	@ManyToMany
-	@JoinTable(name="project_employee",joinColumns = @JoinColumn(name="project_id")
-	,inverseJoinColumns = @JoinColumn(name="employee_id")
+	@JoinTable(
+			name = "employee_project",
+			joinColumns = @JoinColumn(name = "project_id"),
+			inverseJoinColumns = @JoinColumn(name = "employee_id")
 	)
 	@JsonBackReference
-	private Set<EmployeeModel>employee;
+	private Set<EmployeeModel> employees;
+
+	@ManyToOne
+	@JoinColumn(name = "manager_id")
+	private EmployeeModel manager;
 }

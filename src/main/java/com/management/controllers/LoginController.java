@@ -31,12 +31,12 @@ public class LoginController {
 	
 	@Autowired
 	private JwtUtil jwtUtil;
-	
-	
+
+
 	@PostMapping("/auth")
 	@Operation(
-			summary = "authenticate yourself",
-			description = "enter username and password to get Token for secure api access."
+			summary = "Login to generate JWT token",
+			description = "Pass valid email and password to receive a JWT token. This token is required for accessing protected APIs."
 	)
 	public ResponseEntity<?> userLogin(@RequestBody LoginDto loginDto) {
 	    try {

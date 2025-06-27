@@ -1,134 +1,106 @@
 package com.management.Services;
-import com.management.models.Users;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import com.management.dto.employeeDto.EmployeeRequest;
+import com.management.dto.employeeDto.EmployeeResponse;
+import com.management.exception.ResourceNotFoundException;
+import com.management.mappers.EmployeeMapper;
+import com.management.models.*;
+import com.management.repository.*;
+import com.management.utils.Helper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import com.management.dto.EmployeeDto;
-import com.management.exception.ResourceNotFoundException;
-import com.management.models.DepartmentModel;
-import com.management.models.EmployeeModel;
-
-import com.management.repository.DepartmentRepo;
-import com.management.repository.EmployeeRepo;
-import com.management.repository.UserModelRepo;
-
-import java.lang.reflect.Type;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class EmployeeService {
 
-	@Autowired
-	private EmployeeRepo employeeRepo;
-	@Autowired
-	private UserModelRepo userRepo;
-	@Autowired
-	private DepartmentRepo departmentRepo;
-	@Autowired
-	private UserProfileService userProfileService;
-	@Autowired
-	private ModelMapper modelMapper;
+    private final EmployeeRepo employeeRepo;
+    private final UserModelRepo userModelRepo;
+    private final DepartmentRepo departmentRepo;
+    private final DesignationRepo designationRepo;
+    private final EmployeeMapper employeeMapper;
+    private final Helper helper;
 
-	// create employee other data will receive through body
-	// employee id will receive through path variable
-	// department id will receive through path variable
-	public ResponseEntity<Object> createEmployee(Long userId, Long departmentId, EmployeeDto employee) {
+   /*
+   *  create employee by using userid,department id and initial designation
+   */
 
-		Users user = userRepo.findById(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-		// Check if department exists, otherwise throw exception
-		DepartmentModel department = departmentRepo.findById(departmentId)
-				.orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + departmentId));
+    public ResponseEntity<EmployeeResponse> createEmployee( EmployeeRequest request,Long userId, Long departmentId
+    , Long designationId){
 
-		EmployeeModel employeeModel = new EmployeeModel();
-		employeeModel.setFirstName(employee.getFirstName());
-		employeeModel.setLastName(employee.getLastName());
-		employeeModel.setUser(user);
-		employeeModel.setPhoneNumber(employee.getPhoneNumber());
-		employeeModel.setSalary(employee.getSalary());
-		employeeModel.setDepartment(department);
+        //checking all id are not null
+        if(userId==null)throw new IllegalArgumentException("user id is required");
+        //finding user is exists with the given id or not
+        Users users = userModelRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with this ID: " + userId));
 
-		EmployeeModel result = employeeRepo.save(employeeModel);
+        if (employeeRepo.existsByUser_Id(users.getId())) {
+            throw new IllegalArgumentException("Employee already exists for this user");
+        }
+        if(departmentId==null)throw new IllegalArgumentException("department id is required");
+        if(designationId==null)throw new IllegalArgumentException("designation id is required");
 
-		return ResponseEntity.status(HttpStatus.CREATED).body(convertToEmployeeDto(result));
-	}
+        //finding department with department id
+        DepartmentModel department = departmentRepo.findById(departmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("department not found with this ID: " + departmentId));
 
-	// get all employee
-//	public ResponseEntity<Object> employees() {
-//		List<EmployeeModel> allEmp = employeeRepo.findAll();
-//		EmployeeDto result = modelMapper.map(allEmp, EmployeeDto.class);
-//		return ResponseEntity.ok(result);
-//	}
-	
-	
-	public ResponseEntity<Object> employees() {
-	    List<EmployeeModel> allEmp = employeeRepo.findAll();
-	    Type targetListType = new TypeToken<List<EmployeeDto>>() {}.getType();
-	    List<EmployeeDto> result = modelMapper.map(allEmp, targetListType);
-	    return ResponseEntity.ok(result);
-	}
+        //finding designation
+        DesignationModel designation = designationRepo.findById(designationId)
+                .orElseThrow(() -> new ResourceNotFoundException("designation not found with this ID: " + designationId));
 
-	// delete employees by employee id
-	public ResponseEntity<Void> deleteEmployees(Long employeeId) {
-		if (!employeeRepo.existsById(employeeId)) {
-			throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
-		}
-		employeeRepo.deleteById(employeeId);
-		return ResponseEntity.noContent().build();
-	}
+        //converting EmployeeRequest dto to EmployeeModel to save because,Employee model we have thats' why
+        EmployeeModel employee=helper.toEmployeeModel(request,users,department,designation);
 
-	// update employee details
-	// will get employee id through pathvariable to update perticular employee
-	// details
-	// get first name and lastname, phone number and salary
-	public ResponseEntity<Object> updateEmployee(Long employeeId, EmployeeDto employee) {
-		Optional<EmployeeModel> empModel = employeeRepo.findById(employeeId);
-		if (!empModel.isPresent()) {
-			throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
-		}
+        EmployeeModel result=employeeRepo.save(employee);
 
-		EmployeeModel storedResult = empModel.get();
-		storedResult.setFirstName(employee.getFirstName());
-		storedResult.setLastName(employee.getLastName());
-		storedResult.setPhoneNumber(employee.getPhoneNumber());
-		storedResult.setSalary(employee.getSalary());
-		employeeRepo.save(storedResult);
+        Set<String> projectName = result.getProjects() != null
+                ? result.getProjects().stream().map(ProjectModel::getName).collect(Collectors.toSet())
+                : new HashSet<>();
+        EmployeeResponse response= helper.toEmployeeResponse(result,users,projectName);
 
-		return ResponseEntity.ok("Employee updated successfully.");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
-	}
+    //get employee by its id or admin can see it
+    public ResponseEntity<EmployeeResponse> getEmployeeById(Long empId){
+      EmployeeModel emp=employeeRepo.findById(empId).orElseThrow(()->new ResourceNotFoundException("employee not found with id: "+empId));
+      String dbUserEmail=emp.getUser().getEmail();
+      //current logged-in emp
+       String currentEmpEmail=helper.currentLoggedInUserEmail();
+       boolean isAdmin= helper.isAdmin();
 
-	// get employee by its id
-	// only admin manager and self employee can get this endpoint
+        if (!isAdmin && !dbUserEmail.equals(currentEmpEmail)) {
+            throw new AuthorizationDeniedException("Access denied");
+        }
 
-	public ResponseEntity<Object> employeeById(Long employeeId) {
-		Optional<EmployeeModel> empModel = employeeRepo.findById(employeeId);
-		if (!empModel.isPresent()) {
-			throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
-		}
-		EmployeeModel employee = empModel.get();
+        Set<String> projects=emp.getProjects().stream().map(ProjectModel::getName).collect(Collectors.toSet());
 
-		// 🔹 Get the current logged-in user
-		Users currentUser = userProfileService.getProfile();
-		String currentUserRole = currentUser.getRole().getName();
+        EmployeeResponse response=EmployeeResponse.builder()
+                .id(emp.getId()).firstName(emp.getFirstName())
+                .lastName(emp.getLastName())
+                .email(emp.getUser().getEmail())
+                .phoneNumber(emp.getPhoneNumber())
+                .salary(emp.getSalary())
+                .departmentName(emp.getDepartment().getName())
+                .designation(emp.getDesignation().getTitle())
+                .projects(projects).build();
+        return ResponseEntity.ok(response);
 
-		// ✅ Corrected authorization check
-		if (!(currentUserRole.equals("ADMIN") || currentUserRole.equals("MANAGER")
-				|| currentUser.getId().equals(employee.getUser()))) {
-			throw new AuthorizationDeniedException("You are not authorized to access this resource");
-		}
+    }
 
-		return ResponseEntity.ok(convertToEmployeeDto(employee));
-	}
 
-	private EmployeeDto convertToEmployeeDto(EmployeeModel emp) {
-		return modelMapper.map(emp, EmployeeDto.class);
-	}
+
 
 }

@@ -50,6 +50,7 @@ public class GlobalException {
 		} else if (ex instanceof DuplicateResourceException) {
 			httpStatus = HttpStatus.BAD_REQUEST;
 		}
+		//
 
 		// Create error response
 		ApiError apiResponse = new ApiError(formattedDate, httpStatus.value(), httpStatus, ex.getLocalizedMessage(),

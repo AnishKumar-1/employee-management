@@ -2,31 +2,18 @@ package com.management.models;
 
 import java.math.BigDecimal;
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Employee")
+@Table(name = "employee") // ✅ Use lowercase by convention
 public class EmployeeModel {
 
 	@Id
@@ -34,14 +21,14 @@ public class EmployeeModel {
 	private Long id;
 
 	@Column(nullable = false)
-	private String firstName; // Changed field name to camelCase
-    
+	private String firstName;
+
 	private String lastName;
-	
-	@OneToOne
-	@JoinColumn(name = "user_id", referencedColumnName = "id")
+
+	@OneToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
 	private Users user;
-	
+
 	@Column(nullable = false, length = 15)
 	private String phoneNumber;
 
@@ -49,12 +36,19 @@ public class EmployeeModel {
 	private BigDecimal salary;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "department_id", referencedColumnName = "id", nullable = false) // Removed redundant																					// @Column(nullable = false)
-	private DepartmentModel department; // Replaced DepartmentDto with DepartmentModel
-	
-	@OneToMany(mappedBy = "manager")
+	@JoinColumn(name = "department_id", nullable = false)
+	private DepartmentModel department;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "designation_id")
+	private DesignationModel designation;
+
+	// Projects managed by this employee (if any)
+	@OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
 	private Set<ProjectModel> managedProjects;
-	@ManyToMany(mappedBy = "employee")
+
+	// Projects assigned to this employee
+	@ManyToMany(mappedBy = "employees", fetch = FetchType.LAZY) // ✅ use "employees", not "employee"
 	@JsonManagedReference
 	private Set<ProjectModel> projects;
 }

@@ -1,10 +1,14 @@
 package com.management.jwt;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -46,10 +50,14 @@ public class CustomJwtFilter extends OncePerRequestFilter{
 			 String authToken=tokenFromHeader(request);
 			 if(jwtUtil.validateToken(authToken)) {
 				 String username=jwtUtil.extractUsername(authToken);
-				 UserDetails userDetails=customUserDetils.loadUserByUsername(username);
+				 List<GrantedAuthority> authorities=jwtUtil.extractRolesFromToken(authToken)
+						 .stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+
 				 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken=new
-						 UsernamePasswordAuthenticationToken(userDetails, null,userDetails.getAuthorities());
+						 UsernamePasswordAuthenticationToken(username, null,authorities);
+
 				 usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
 				 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 			 }
 			
@@ -71,14 +79,13 @@ public class CustomJwtFilter extends OncePerRequestFilter{
 
 	//whitelisted urls/bypass
 	public boolean whitelistedPath(String path){
-		if (path.startsWith("/api/auth")
+		return path.startsWith("/api/auth")
 				|| path.startsWith("/swagger-ui")
 				|| path.startsWith("/v3/api-docs")
 				|| path.startsWith("/swagger-resources")
-				|| path.startsWith("/webjars")) {
-			return true;
-		}
-		return false;
+				|| path.startsWith("/webjars")
+				|| path.startsWith("/h2-db"); // ✅ Corrected
 	}
-	
+
+
 }

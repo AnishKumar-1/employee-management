@@ -1,6 +1,4 @@
 package com.management.security;
-
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,7 +30,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",           // OpenAPI docs endpoint
             "/swagger-resources/**",     // used by Swagger internally
             "/webjars/**",                // Swagger's static resources (JS/CSS)
-            "/api/docs/**"
+            "/api/docs/**",
+            "/h2-db/**"
     };
 
 
@@ -63,6 +63,7 @@ public class SecurityConfig {
                     .authenticationEntryPoint(customAuthenticationEntryPoint)  // Handles 401 Unauthorized
                     .accessDeniedHandler(customAccessDeniedHandler)  // Handles 403 Forbidden
                 )
+                .headers(header->header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
             .build();
     }
 
@@ -77,9 +78,5 @@ public class SecurityConfig {
     public AuthenticationManager authManager(AuthenticationConfiguration configuration)throws Exception{
         return configuration.getAuthenticationManager();
     }
-    
-    @Bean
-    public ModelMapper modelMapper() {
-    	return new ModelMapper();
-    }
+
 }
