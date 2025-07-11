@@ -2,8 +2,10 @@ package com.management.services;
 
 import com.management.dto.employeeDto.EmployeeRequest;
 import com.management.dto.employeeDto.EmployeeResponse;
+import com.management.dto.employeeDto.UpdateEmployee;
 import com.management.exception.ResourceNotFoundException;
 import com.management.mappers.EmployeeMapper;
+import com.management.mappers.UpdateEmpMapper;
 import com.management.models.*;
 import com.management.repository.*;
 import com.management.utils.Helper;
@@ -26,7 +28,6 @@ public class EmployeeService {
     private final UserModelRepo userModelRepo;
     private final DepartmentRepo departmentRepo;
     private final DesignationRepo designationRepo;
-    private final EmployeeMapper employeeMapper;
     private final Helper helper;
 
    /*
@@ -101,6 +102,34 @@ public class EmployeeService {
        List<EmployeeResponse> responses=emp.stream().map(data->
                helper.toEmployeeResponse(data,data.getUser(),projects)).toList();
        return ResponseEntity.ok(responses);
+    }
+
+
+    //update employee by employee id
+    public ResponseEntity<String> updateEmp(long empId, UpdateEmployee request){
+
+        EmployeeModel emp=employeeRepo.findById(empId).orElseThrow(()->new ResourceNotFoundException("employee not found with id: "+empId));
+        String dbUserEmail=emp.getUser().getEmail();
+        String currentEmpEmail=helper.currentLoggedInUserEmail();
+        if (!dbUserEmail.equals(currentEmpEmail)) {
+            throw new AuthorizationDeniedException("Access denied");
+        }
+
+//        updateEmpMapper.updateEmpMap(request, emp);
+
+        // ✅ Manual field update
+        if (request.getFirstName() != null) {
+            emp.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            emp.setLastName(request.getLastName());
+        }
+        if (request.getPhoneNumber() != null) {
+            emp.setPhoneNumber(request.getPhoneNumber());
+        }
+
+        employeeRepo.save(emp);
+        return ResponseEntity.ok("employee record updated successfully");
     }
 
 

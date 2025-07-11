@@ -1,5 +1,6 @@
 package com.management.controllers;
 
+import com.management.dto.employeeDto.UpdateEmployee;
 import com.management.services.EmployeeService;
 import com.management.dto.employeeDto.EmployeeRequest;
 import com.management.dto.employeeDto.EmployeeResponse;
@@ -53,6 +54,14 @@ public class EmployeeController {
     @Operation(summary = "get all employee (Admin)")
     public ResponseEntity<List<EmployeeResponse>> employees(){
     return employeeService.employees();
+    }
+
+    //update employee data. Self
+
+    @PatchMapping("/{empId}")
+    @Operation(summary = "update employee (Self Employee)",description = "required employee id to update its record")
+    public ResponseEntity<String> update(@NotNull @PathVariable Long empId, @RequestBody UpdateEmployee request){
+        return employeeService.updateEmp(empId,request);
     }
 
 }
